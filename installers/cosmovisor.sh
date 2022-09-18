@@ -22,6 +22,7 @@ while test $# -gt 0; do
 		echo
 		echo -e "${C_LGn}Useful URLs${RES}:"
 		echo -e "https://github.com/SecorD0/utils/blob/main/installers/golang.sh - script URL"
+		echo -e "https://t.me/OnePackage — noderun and tech community"
 		echo
 		return 0 2>/dev/null; exit 0
 		;;
