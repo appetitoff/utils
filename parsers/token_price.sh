@@ -79,9 +79,9 @@ if [ -n "$round" ]; then
 fi
 project=`option_value "$(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/databases/tokens.txt | grep -P "\t${token_symbol^^}\t" | tr -d '\r' | awk -F "\t" '{print $4}')"`
 if [ -n "$project" ]; then
-	price=`. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/parsers/xpath.sh) -x "/html/body/script[1]/text()" -u "https://coinmarketcap.com/currencies/${project}/" | sed "s%<\!\[CDATA\[%%g; s%]]>%%g" | jq ".props.initialProps.pageProps.info.statistics.price"`
+	price=`. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/parsers/xpath.sh) -x "/html/body/script[1]/text()" -u "https://coinmarketcap.com/currencies/${project}/" | sed "s%<\!\[CDATA\[%%g; s%]]>%%g" | jq ".props.pageProps.info.statistics.price"`
 else
-	price=`. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/parsers/xpath.sh) -x "/html/body/script[1]/text()" -u "https://coinmarketcap.com/currencies/${token_symbol}/" | sed "s%<\!\[CDATA\[%%g; s%]]>%%g" | jq ".props.initialProps.pageProps.info.statistics.price"`
+	price=`. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/parsers/xpath.sh) -x "/html/body/script[1]/text()" -u "https://coinmarketcap.com/currencies/${token_symbol}/" | sed "s%<\!\[CDATA\[%%g; s%]]>%%g" | jq ".props.pageProps.info.statistics.price"`
 fi
 if [ -n "$price" ]; then
 	if [ -n "$multiplier" ]; then
