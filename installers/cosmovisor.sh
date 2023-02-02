@@ -48,7 +48,8 @@ install() {
 	cd
 	git clone https://github.com/cosmos/cosmos-sdk
 	cd cosmos-sdk/
-	git checkout cosmovisor
+	local cosmovisor_version=`git tag -l "cosmovisor*" | tail -n1`
+	git checkout $cosmovisor_version
 	make cosmovisor
 	mv cosmovisor/cosmovisor /usr/bin
 	cd
