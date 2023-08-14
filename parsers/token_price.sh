@@ -3,6 +3,7 @@
 token_symbol=""
 round=""
 multiplier=""
+
 # Options
 . <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/colors.sh) --
 option_value(){ echo "$1" | sed -e 's%^--[^=]*=%%g; s%^-[^=]*=%%g'; }
@@ -11,7 +12,7 @@ while test $# -gt 0; do
 	-h|--help)
 		. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/logo.sh)
 		echo
-		echo -e "${C_LGn}Functionality${RES}: the script parses a token price from CoinMarketCap page"
+		echo -e "${C_LGn}Functionality${RES}: the script parses a token price from CoinGecko page"
 		echo
 		echo -e "${C_LGn}Usage${RES}: script ${C_LGn}[OPTIONS]${RES}"
 		echo
@@ -25,7 +26,6 @@ while test $# -gt 0; do
 		echo
 		echo -e "${C_LGn}Useful URLs${RES}:"
 		echo -e "https://github.com/SecorD0/utils/blob/main/parsers/token_price.sh - script URL"
-		echo -e "https://github.com/SecorD0/utils/blob/main/databases/tokens.txt - token database"
 		echo -e "https://t.me/OnePackage — noderun and tech community"
 		echo -e "https://learning.1package.io — guides and articles"
 		echo -e "https://teletype.in/@letskynode — guides and articles"
@@ -52,50 +52,55 @@ while test $# -gt 0; do
 		;;
 	esac
 done
+
 # Functions
 printf_n(){ printf "$1\n" "${@:2}"; }
-# Actions
-sudo apt install wget jq -y &>/dev/null
-if [ ! -n "$token_symbol" ]; then
-	printf_n "${C_R}You didn't specify a token symbol via${RES} -ts ${C_R}option!${RES}"
-	return 1 2>/dev/null; exit 1
-fi
-if [ -n "$multiplier" ]; then
-	multiplier=`echo "$multiplier" | tr -d ' ' | tr ',' '.'`
-	if printf "%f" "$multiplier" &>/dev/null; then
-		multiplier=`printf "%f" $multiplier`
-	else
-		printf_n "${C_R}The specified multiplier is not a number!${RES}"
+main() {
+	if [ ! -n "$token_symbol" ]; then
+		printf_n "${C_R}You didn't specify a token symbol via${RES} -ts ${C_R}option!${RES}"
 		return 1 2>/dev/null; exit 1
 	fi
-fi
-if [ -n "$round" ]; then
-	if printf "%d" "$round" &>/dev/null; then
-		round=`printf "%d" $round`
-	else
-		printf_n "${C_R}The specified number of decimal places is not a number!${RES}"
-		return 1 2>/dev/null; exit 1
-	fi
-fi
-project=`option_value "$(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/databases/tokens.txt | grep -P "\t${token_symbol^^}\t" | tr -d '\r' | awk -F "\t" '{print $4}')"`
-if [ -n "$project" ]; then
-	price=`. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/parsers/xpath.sh) -x "/html/body/script[1]/text()" -u "https://coinmarketcap.com/currencies/${project}/" | sed "s%<\!\[CDATA\[%%g; s%]]>%%g" | jq ".props.pageProps.info.statistics.price"`
-else
-	price=`. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/parsers/xpath.sh) -x "/html/body/script[1]/text()" -u "https://coinmarketcap.com/currencies/${token_symbol}/" | sed "s%<\!\[CDATA\[%%g; s%]]>%%g" | jq ".props.pageProps.info.statistics.price"`
-fi
-if [ -n "$price" ]; then
 	if [ -n "$multiplier" ]; then
-		sudo apt install bc -y &>/dev/null
-		result=`bc -l <<< "$price*$multiplier"`
-	else
-		result="$price"
+		local multiplier=`echo "$multiplier" | tr -d ' ' | tr ',' '.'`
+		if printf "%f" "$multiplier" &>/dev/null; then
+			local multiplier=`printf "%f" $multiplier`
+		else
+			printf_n "${C_R}The specified multiplier is not a number!${RES}"
+			return 1 2>/dev/null; exit 1
+		fi
 	fi
 	if [ -n "$round" ]; then
-		printf_n "%.${round}f" "$result"
-	else
-		printf_n "%f" "$result"
+		if printf "%d" "$round" &>/dev/null; then
+			local round=`printf "%d" $round`
+		else
+			printf_n "${C_R}The specified number of decimal places is not a number!${RES}"
+			return 1 2>/dev/null; exit 1
+		fi
 	fi
-else
-	printf_n "${C_R}There is no such token!${RES}"
-	return 1 2>/dev/null; exit 1
-fi
+	local project_id=`wget -qO- https://api.coingecko.com/api/v3/coins/list | jq -r '[.[] | select(.symbol=="'${token_symbol,,}'")][0].id'`
+	if [ ! -n "$project_id" ]; then
+		printf_n "${C_R}There is no such token!${RES}"
+		return 1 2>/dev/null; exit 1
+	fi
+	local price=`wget -qO- https://api.coingecko.com/api/v3/coins/${project_id} | jq '.market_data.current_price.usd' 2>/dev/null`
+	if [ -n "$price" ]; then
+		if [ -n "$multiplier" ]; then
+			sudo apt install bc -y &>/dev/null
+			local result=`bc -l <<< "$price*$multiplier"`
+		else
+			local result="$price"
+		fi
+		if [ -n "$round" ]; then
+			printf_n "%.${round}f" "$result"
+		else
+			printf_n "%f" "$result"
+		fi
+	else
+		printf_n "${C_R}There is no such token!${RES}"
+		return 1 2>/dev/null; exit 1
+	fi
+}
+
+# Actions
+sudo apt install wget jq -y &>/dev/null
+main
