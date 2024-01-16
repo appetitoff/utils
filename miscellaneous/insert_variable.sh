@@ -14,7 +14,7 @@ while test $# -gt 0; do
 	-h|--help)
 		. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/logo.sh)
 		echo
-		echo -e "${C_LGn}Functionality${RES}: the script inserts variable or alias to ${C_LGn}$HOME/.bash_profile${RES}"
+		echo -e "${C_LGn}Functionality${RES}: the script inserts variable or alias to ${C_LGn}/home/devops/.bash_profile${RES}"
 		echo
 		echo -e "${C_LGn}Usage${RES}: script ${C_LGn}[OPTIONS]${RES}"
 		echo
@@ -74,27 +74,27 @@ done
 printf_n(){ printf "$1\n" "${@:2}"; }
 
 # Actions
-touch $HOME/.bash_profile
-. $HOME/.bash_profile
+touch /home/devops/.bash_profile
+. /home/devops/.bash_profile
 if [ ! -n "$name" ]; then
 	printf_n "${C_R}You didn't specify a name via${RES} -n ${C_R}option!${RES}"
 	return 1 2>/dev/null; exit 1
 fi
 if [ "$delete_type" != "none" ]; then
 	if [ "$delete_type" = "delete" ]; then
-		sed -i "0,/ ${name}=/{/ ${name}=/d;}" $HOME/.bash_profile
+		sed -i "0,/ ${name}=/{/ ${name}=/d;}" /home/devops/.bash_profile
 	elif [ "$delete_type" = "delete_all" ]; then
-		sed -i "/ ${name}=/d" $HOME/.bash_profile
+		sed -i "/ ${name}=/d" /home/devops/.bash_profile
 	fi
 	unset "$name"
 	unalias "$name" 2>/dev/null
 else
 	if [ -n "$rename" ]; then
-		sed -i "s%${rename}%${name}%" $HOME/.bash_profile
+		sed -i "s%${rename}%${name}%" /home/devops/.bash_profile
 		unset "$rename"
 		unalias "$rename" 2>/dev/null
 		if [ ! -n "$value" ]; then
-			. $HOME/.bash_profile
+			. /home/devops/.bash_profile
 			return 0 2>/dev/null; exit 0
 		fi
 	fi
@@ -102,15 +102,15 @@ else
 		printf "${C_LGn}Enter the value:${RES} "
 		read -r value
 	fi
-	if ! cat $HOME/.bash_profile | grep -q " ${name}="; then
-		echo "${type} ${name}=\"${value}\"" >> $HOME/.bash_profile
-	elif ! cat $HOME/.bash_profile | grep -qF "${name}=\"${value}\""; then
-		sed -i "s%^.*${name}*=.*%${type} ${name}=\"${value}\"%" $HOME/.bash_profile
+	if ! cat /home/devops/.bash_profile | grep -q " ${name}="; then
+		echo "${type} ${name}=\"${value}\"" >> /home/devops/.bash_profile
+	elif ! cat /home/devops/.bash_profile | grep -qF "${name}=\"${value}\""; then
+		sed -i "s%^.*${name}*=.*%${type} ${name}=\"${value}\"%" /home/devops/.bash_profile
 	fi
-	variable=`cat $HOME/.bash_profile | grep -qF "${name}=\"${value}\""`
+	variable=`cat /home/devops/.bash_profile | grep -qF "${name}=\"${value}\""`
 	if ! grep -q "${type}" <<< "$variable"; then
-		sed -i "s%^.*${name}*=.*%${type} ${name}=\"${value}\"%" $HOME/.bash_profile
+		sed -i "s%^.*${name}*=.*%${type} ${name}=\"${value}\"%" /home/devops/.bash_profile
 	fi
 fi
-sed -i '/^$/d' $HOME/.bash_profile
-. $HOME/.bash_profile
+sed -i '/^$/d' /home/devops/.bash_profile
+. /home/devops/.bash_profile
